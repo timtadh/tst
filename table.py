@@ -17,11 +17,57 @@ JMP = 3
 WILDCARD = 0x11FFFF
 INF = 0x10FFFF
 
+def match_subset(a, b):
+	def endpoints(s):
+		if '*' not in s: return s, s
+		start = s[:s.index('*')]
+		end = s[len(s) - s[-1::-1].index('*'):][-1::-1]
+		return start, end
+	astart, aend = endpoints(a)
+	bstart, bend = endpoints(b)
+	for i, ch in enumerate(astart):
+		if len(bstart) <= i:
+			raise Exception, "work on this case"
+		if ch != bstart[i]: return False
+	for i, ch in enumerate(aend):
+		if len(bend) <= i:
+			raise Exception, "work on this case"
+		if ch != bend[i]: return False
+	
+	return True
+
 class SymbolTable(object):
 
 	def __init__(self):
 		self.root = Node(None, None)
 		self.objs = dict()
+
+	def find(self, pattern):
+		insts = list()
+		for ch in pattern:
+			if ch != '*':
+				insts.append((CHAR, ord(ch), ord(ch)))
+			else:
+				i = len(insts)
+				insts.append((SPLIT, len(insts)+1, len(insts)+3))
+				insts.append((CHAR, WILDCARD, WILDCARD))
+				insts.append((JMP, i, 0))
+		insts.append((MATCH, 0, 0))
+		def items(symbol, insts):
+			matches = hendersonvm(insts, self.root)
+			try: 
+				match = matches.next()
+			except StopIteration: 
+				raise KeyError, \
+					"Symbol pattern '%s' not found in table." % symbol
+			yield match
+			for match in matches:
+				yield match
+		return items(pattern, insts)
+
+	def keys(self): return self.objs.keys()
+	
+	def iteritems(self): return self.objs.iteritems()
 
 	def __len__(self): return len(self.objs)
 
@@ -40,22 +86,7 @@ class SymbolTable(object):
 			self.objs[symbol] = n
 
 	def __getitem__(self, symbol):
-		if symbol in self.objs:
-			return (o for o in [self.objs[symbol].obj])
-		insts = list()
-		for ch in symbol:
-			if ch != '*':
-				insts.append((CHAR, ord(ch), ord(ch)))
-			else:
-				i = len(insts)
-				insts.append((SPLIT, len(insts)+1, len(insts)+3))
-				insts.append((CHAR, WILDCARD, WILDCARD))
-				insts.append((JMP, i, 0))
-		insts.append((MATCH, 0, 0))
-		matches = tuple(hendersonvm(insts, self.root))
-		if not matches:
-			raise KeyError, "SymbolPattern '%s' not found in table." % symbol
-		return (n.obj for n in matches)
+		return self.objs[symbol].obj
 
 	def __delitem__(self, symbol):
 		if symbol not in self.objs:
@@ -78,11 +109,11 @@ class SymbolTable(object):
 		except KeyError: return False
 
 	def __str__(self):
-		s = str(self.objs)+ '\n'
-		insts = [(SPLIT, 1, 3),(CHAR, WILDCARD, WILDCARD),
-				(JMP, 0, 0),(MATCH, 0, 0)]
-		s += str(tuple(hendersonvm(insts, self.root))) + '\n'
-		return s
+		if not len(self): return '{}'
+		return str(dict(self['*']))
+	
+	def __repr__(self):
+		return str(self)
 
 class Node(object):
 
@@ -180,7 +211,7 @@ def hendersonvm(program, node):
 								addnode(nnodes, pc+1, n[ch])
 					elif inst[0] == MATCH:
 						if n.accepting:
-							yield n
+							yield n.symbol, n.obj
 		cnodes = nnodes
 		nnodes = dict()
 		clist = nlist
@@ -191,18 +222,23 @@ if __name__ == '__main__':
 	t['xyz'] = 1
 	t['xysdfz'] = 2
 	t['ysdfz'] = 3
-	print tuple(t['xyz'])
-	print t
-	print 'x*' in t
-	print 'xyq' in t
-	print 'xyz' in t
-	print len(t)
-	print
-	print [(k, tuple(t[k])) for k in t]
-	print
-	del t['xyz']
-	print t
-	del t['xysdfz']
-	print t
-	del t['ysdfz']
-	print t
+	print dict(t)
+	print dict(t.find('xyz'))
+	print dict(t.find('x*'))
+	for x in t:
+		print x
+	#print tuple(t['xyz'])
+	#print t
+	#print 'x*' in t
+	#print 'xyq' in t
+	#print 'xyz' in t
+	#print len(t)
+	#print
+	#print [(k, tuple(t[k])) for k in t]
+	#print
+	#del t['xyz']
+	#print t
+	#del t['xysdfz']
+	#print t
+	#del t['ysdfz']
+	#print t
