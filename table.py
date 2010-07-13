@@ -17,23 +17,27 @@ JMP = 3
 WILDCARD = 0x11FFFF
 INF = 0x10FFFF
 
-def match_subset(a, b):
+def match_globs(a, b):
 	def endpoints(s):
-		if '*' not in s: return s, s
+		if '*' not in s: return s, s[-1::-1]
 		start = s[:s.index('*')]
 		end = s[len(s) - s[-1::-1].index('*'):][-1::-1]
 		return start, end
 	astart, aend = endpoints(a)
 	bstart, bend = endpoints(b)
+	#print astart, bstart
+	#print aend, bend
+	#print
 	for i, ch in enumerate(astart):
 		if len(bstart) <= i:
-			raise Exception, "work on this case"
+			if bstart == b and b == bend[-1::-1]: return False
+			break
 		if ch != bstart[i]: return False
 	for i, ch in enumerate(aend):
 		if len(bend) <= i:
-			raise Exception, "work on this case"
+			if bstart == b and b == bend[-1::-1]: return False
+			break
 		if ch != bend[i]: return False
-	
 	return True
 
 class SymbolTable(object):
