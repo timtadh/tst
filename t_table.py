@@ -27,5 +27,17 @@ class TestMatchGlobs(unittest.TestCase):
 			else: m = 'not matched'
 			self.assert_(match_globs(test[0], test[1]) == test[2], '"%s" and "%s" should have %s' % (test[0], test[1], m))
 
+class TestTable(unittest.TestCase):
+	
+	def test_init(self):
+		t = SymbolTable()
+	
+	def test_insert(self):
+		t = SymbolTable()
+		t['a'] = 1
+		t['aa'] = 2
+		t['aaa'] = 3
+		self.assertEquals(dict(t), {'a':1,'aa':2,'aaa':3})
+
 if __name__ == '__main__':
 	unittest.main()

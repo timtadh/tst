@@ -114,7 +114,7 @@ class SymbolTable(object):
 
 	def __str__(self):
 		if not len(self): return '{}'
-		return str(dict(self['*']))
+		return str(dict(self.find('*')))
 	
 	def __repr__(self):
 		return str(self)
