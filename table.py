@@ -6,6 +6,7 @@ Copyright (c) 2010 All Rights Reserved.
 Licensed under a BSD style license see the LICENSE file.
 '''
 from collections import deque
+from os.path import sep as PATH_SEP
 
 # Instructions
 MATCH = 0
@@ -42,20 +43,37 @@ def match_globs(a, b):
 
 class SymbolTable(object):
 
-	def __init__(self):
+	def __init__(self, sep=PATH_SEP):
 		self.root = Node(None, None)
 		self.objs = dict()
+		self.sep = sep
 
 	def find(self, pattern):
 		insts = list()
+		prev = None
 		for ch in pattern:
 			if ch != '*':
 				insts.append((CHAR, ord(ch), ord(ch)))
-			else:
+			elif self.sep == None:
 				i = len(insts)
 				insts.append((SPLIT, len(insts)+1, len(insts)+3))
 				insts.append((CHAR, WILDCARD, WILDCARD))
 				insts.append((JMP, i, 0))
+			elif ch == '*' and prev == '*':
+				insts = insts[:-6]
+				i = len(insts)
+				insts.append((SPLIT, len(insts)+1, len(insts)+3))
+				insts.append((CHAR, WILDCARD, WILDCARD))
+				insts.append((JMP, i, 0))
+			else:
+				i = len(insts)
+				insts.append((SPLIT, len(insts)+1, len(insts)+6))
+				insts.append((SPLIT, len(insts)+1, len(insts)+3))
+				insts.append((CHAR, 0, ord(self.sep)-1))
+				insts.append((JMP, len(insts)+2, 0))
+				insts.append((CHAR, ord(self.sep)+1, INF))
+				insts.append((JMP, i, 0))
+			prev = ch
 		insts.append((MATCH, 0, 0))
 		matches = hendersonvm(insts, self.root)
 		for match in matches:
@@ -92,7 +110,7 @@ class SymbolTable(object):
 		n.accepting = False
 		n.symbol = None
 		n.obj = None
-		while not n.edges:
+		while len(n) > 0:
 			if n.fromch == None and n.parent == None: return
 			del n.parent[n.fromch]
 			n = n.parent

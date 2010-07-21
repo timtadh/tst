@@ -37,6 +37,14 @@ class TestTable(unittest.TestCase):
 		t['aa'] = 2
 		t['aaa'] = 3
 
+	def paths(self, t):
+		t['binary/WEB-INF/tiles/footer/footer.jsp'] = 1
+		t['binary/WEB-INF/tiles/form/addAccountForm.jsp'] = 2
+		t['binary/WEB-INF/tiles/menu/menu_empty.jsp'] = 3
+		t['binary/addAccount.jsp'] = 4
+		t['source/dist/WEB-INF/tiles/menu/menu_empty.jsp'] = 5
+		t['source/dist/addClient.jsp'] = 6
+
 	def test_insert(self):
 		t = SymbolTable()
 		self.insert(t)
@@ -55,7 +63,87 @@ class TestTable(unittest.TestCase):
 		del t['a']
 		self.assertEquals(dict(t), {})
 		self.assertEquals(dict(t.find('*')), {})
+		self.insert(t)
+		self.assertEquals(dict(t), {'a':1,'aa':2,'aaa':3})
+		self.assertEquals(dict(t.find('*')), {'a':1,'aa':2,'aaa':3})
 
+	def test_find(self):
+		t = SymbolTable()
+		self.paths(t)
+		self.assertEquals(dict(t),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			})
+		self.assertEquals(dict(t.find('*')), {})
+		self.assertEquals(dict(t.find('**')),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			})
+		self.assertEquals(dict(t.find('**.jsp')),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			})
+		self.assertEquals(dict(t.find('binary/**.jsp')),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+			})
+		self.assertEquals(dict(t.find('binary/*.jsp')),
+			{
+				'binary/addAccount.jsp' : 4,
+			})
+		self.assertEquals(dict(t.find('*/*/*.jsp')),
+			{
+				'source/dist/addClient.jsp' : 6,
+			})
+
+	def test_find_nosep(self):
+		t = SymbolTable(sep=None)
+		self.paths(t)
+		self.assertEquals(dict(t),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			})
+		self.assertEquals(dict(t.find('*')),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			})
+		self.assertEquals(dict(t.find('**')),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			})
 
 if __name__ == '__main__':
 	unittest.main()
