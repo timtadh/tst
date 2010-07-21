@@ -57,11 +57,9 @@ class SymbolTable(object):
 				insts.append((CHAR, WILDCARD, WILDCARD))
 				insts.append((JMP, i, 0))
 		insts.append((MATCH, 0, 0))
-		def items(symbol, insts):
-			matches = hendersonvm(insts, self.root)
-			for match in matches:
-				yield match
-		return items(pattern, insts)
+		matches = hendersonvm(insts, self.root)
+		for match in matches:
+			yield match
 
 	def keys(self): return self.objs.keys()
 
