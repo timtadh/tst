@@ -59,18 +59,12 @@ class SymbolTable(object):
 		insts.append((MATCH, 0, 0))
 		def items(symbol, insts):
 			matches = hendersonvm(insts, self.root)
-			try: 
-				match = matches.next()
-			except StopIteration: 
-				raise KeyError, \
-					"Symbol pattern '%s' not found in table." % symbol
-			yield match
 			for match in matches:
 				yield match
 		return items(pattern, insts)
 
 	def keys(self): return self.objs.keys()
-	
+
 	def iteritems(self): return self.objs.iteritems()
 
 	def __len__(self): return len(self.objs)
@@ -109,13 +103,13 @@ class SymbolTable(object):
 		for k in self.objs: yield k
 
 	def __contains__(self, symbol):
-		try: return bool(tuple(self[symbol]))
+		try: return bool(tuple(self.find(symbol)))
 		except KeyError: return False
 
 	def __str__(self):
 		if not len(self): return '{}'
 		return str(dict(self.find('*')))
-	
+
 	def __repr__(self):
 		return str(self)
 
