@@ -145,5 +145,38 @@ class TestTable(unittest.TestCase):
 				'source/dist/addClient.jsp' : 6,
 			})
 
+	def test__iter__(self):
+		t = SymbolTable()
+		self.paths(t)
+		l1 = [x for x in t]
+		l2 = dict(t).keys()
+		l2.sort()
+		self.assertEquals(l1, l2)
+
+	def test__contains__(self):
+		t = SymbolTable()
+		self.paths(t)
+		self.assertTrue('binary/**.jsp' in t)
+		self.assertFalse('binary/WEB-INF/*.jsp' in t)
+		self.assertFalse('source/*.jsp' in t)
+		self.assertTrue('**' in t)
+		self.assertFalse('*' in t)
+		self.assertTrue('binary/WEB-INF/tiles/footer/footer.jsp' in t)
+		for x in dict(t):
+			self.assertTrue(x in t)
+
+	def test__contains__nosep(self):
+		t = SymbolTable(sep=None)
+		self.paths(t)
+		self.assertTrue('binary/**.jsp' in t)
+		self.assertTrue('binary/WEB-INF/*.jsp' in t)
+		self.assertTrue('source/*.jsp' in t)
+		self.assertTrue('**' in t)
+		self.assertTrue('*' in t)
+		self.assertTrue('binary/WEB-INF/tiles/footer/footer.jsp' in t)
+		for x in dict(t):
+			self.assertTrue(x in t)
+		self. assertFalse('*x*' in t)
+
 if __name__ == '__main__':
 	unittest.main()

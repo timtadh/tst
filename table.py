@@ -54,7 +54,9 @@ class SymbolTable(object):
 		for ch in pattern:
 			if ch != '*':
 				insts.append((CHAR, ord(ch), ord(ch)))
-			elif self.sep == None:
+			elif self.sep == None and prev == '*' and ch == '*':
+				pass
+			elif self.sep == None and ch == '*':
 				i = len(insts)
 				insts.append((SPLIT, len(insts)+1, len(insts)+3))
 				insts.append((CHAR, WILDCARD, WILDCARD))
@@ -116,7 +118,9 @@ class SymbolTable(object):
 			n = n.parent
 
 	def __iter__(self):
-		for k in self.objs: yield k
+		keys = self.objs.keys()
+		keys.sort()
+		for k in keys: yield k
 
 	def __contains__(self, symbol):
 		try: return bool(tuple(self.find(symbol)))
@@ -124,7 +128,7 @@ class SymbolTable(object):
 
 	def __str__(self):
 		if not len(self): return '{}'
-		return str(dict(self.find('*')))
+		return str(dict(self.find('**')))
 
 	def __repr__(self):
 		return str(self)
