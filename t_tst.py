@@ -5,8 +5,9 @@ Contact: tim.tadh@hackthology.com
 Copyright (c) 2010 All Rights Reserved.
 Licensed under a BSD style license see the LICENSE file.
 '''
-import unittest, os, base64, itertools, random
+import unittest, os, sys, base64, itertools, random, time
 from tst import TST
+from table import SymbolTable
 
 def strings(s='abcde'):
 	out = list()
@@ -75,7 +76,7 @@ class TestTable(unittest.TestCase):
 
 	#def test_insert(self):
 		#t = TST()
-		#self.insert_tester(t, (('b', 2), ('a', 1), ('d', 4), ('daf', 5), ('db', 6), ('dac', 3)))
+		#self.insert_tester1(t, (('b', 2), ('a', 1), ('d', 4), ('daf', 5), ('db', 6), ('dac', 3)), list())
 
 	#def test_random(self):
 		#for j in xrange(500):
@@ -89,13 +90,65 @@ class TestTable(unittest.TestCase):
 			#t = TST()
 			#if not self.insert_tester1(t, l, s): break
 
-	def test_complete(self):
-		#random.seed(os.urandom(300))
-		s = strings('abc')
-		l = [(s,i) for i,s in enumerate(s)]
-		random.shuffle(l)
-		t = TST()
-		self.insert_tester1(t, l, set(s))
+	#def test_complete(self):
+		##random.seed(os.urandom(300))
+		#s = strings('abcd')
+		#l = [(s,i) for i,s in enumerate(s)]
+		#random.shuffle(l)
+		#t = TST()
+		#s = time.time()
+		#self.insert_tester2(t, l, set())
+		#e = time.time()
+		#sys.stderr.write(str((s, e, e-s))+'\n')
+		##print t
+
+	def itertest(self, size, i):
+		sys.stderr.write('\n')
+		string = os.urandom(size).replace('\0', '')
+		s = time.time()
+		hash(string)
+		e = time.time()
+		sys.stderr.write(str(round(e-s, 5)) + ' ' +str(round(e-s, 5)*i)+'\n')
+		s = time.time()
+		for x in string: pass
+		e = time.time()
+		sys.stderr.write(str(round(e-s, 5)*i)+'\n')
+		s = time.time()
+		for x in string: x
+		e = time.time()
+		sys.stderr.write(str(round(e-s, 5)*i)+'\n')
+		s = time.time()
+		print string == string
+		e = time.time()
+		sys.stderr.write(str(round(e-s, 5)*i)+'\n\n')
+
+	def test_time(self):
+		size = 10000
+		i =    10000
+		self.itertest(size, i)
+		#s = set()
+		l = list()
+		for x in xrange(i):
+			k = os.urandom(size).replace('\0', '')
+			#if k in s: continue
+			l.append(k)
+			#s.add(k)
+		strs = l#[(''.join(strings(s)), i) for i,s in enumerate(itertools.permutations('abcdef'))]
+		#strs =
+		for clazz in [dict, TST]:
+			sys.stderr.write(str(clazz)+'\n')
+			t = clazz()
+			s = time.time()
+			for x in strs:
+				t[x] = 1
+			e = time.time()
+			sys.stderr.write(str(round(e-s, 5))+'\n')
+			#del t
+			s = time.time()
+			for x in strs:
+				assert t[x] == 1
+			e = time.time()
+			sys.stderr.write(str(round(e-s, 5))+'\n\n')
 		#print t
 
 

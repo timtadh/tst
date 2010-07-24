@@ -17,185 +17,140 @@ class TST(object):
 		see Algorithms in (C|C++|Java) by Robert Sedgewick Ch. 15 Section 4'''
 
 	def __init__(self):
-		self.root = None
+		self.heads = [None for x in xrange(256)]
+		#self.root =None
 
-	def find(self, pattern):
-		pass
+	#def find(self, pattern):
+		#pass
 
-	def keys(self):
-		pass
+	#def keys(self):
+		#pass
 
-	def iteritems(self):
-		pass
+	#def iteritems(self):
+		#pass
 
-	def __len__(self):
-		pass
+	#def __len__(self):
+		#pass
 
 	def __setitem__(self, symbol, obj):
-		def split(d, n):
-			ch = symbol[d]
-			#print d, n, len(symbol), ch, n.key[d]
-			if d+1 == len(symbol) and d+1 == len(n.key):
-				sys.stderr.write('case1\n')
-				sys.stderr.write(str((symbol, n.key, n.ch, ch))+'\n')
-				if   ch <  n.ch: n.l = insert(n.l, d)
-				elif ch == n.ch:
-					if n.key == symbol: n.val = obj
-					else:
-						print self
-						raise Exception, "same object? no ..."
-				elif ch >  n.ch: n.r = insert(n.r, d)
-				return n
-			elif d+1 == len(n.key):
-				sys.stderr.write('case2\n')
-				sys.stderr.write(str((symbol, n.key, n.ch, ch))+'\n')
-				if   ch <  n.ch: n.l = insert(n.l, d)
-				elif ch == n.ch: n.m = insert(n.m, d+1)
-				elif ch >  n.ch: n.r = insert(n.r, d)
-				return n
-			elif d+1 == len(symbol):
-				sys.stderr.write('case3\n')
-				sys.stderr.write(str((symbol, n.key, n.ch, ch))+'\n')
-				new = node(ch, key=symbol, val=obj)
-				if ch <  n.ch: new.r = n
-				if ch == n.ch: new.m = n
-				if ch >  n.ch: new.l = n
-				return new
-			else:
-				sys.stderr.write('case4\n')
-				sys.stderr.write(str((symbol, n.key, n.ch, ch, ch<n.ch, ch==n.ch, ch>n.ch))+'\n')
-				new = node(n.ch, m=node(n.key[d+1], key=n.key, val=n.val))
-				if   ch <  n.key[d]: new.l = node(ch, key=symbol, val=obj)
-				elif ch == n.key[d]: new.m = split(d+1, new.m)
-				elif ch >  n.key[d]: new.r = node(ch, key=symbol, val=obj)
-				return new
-			raise Exception
+		symbol += END
+		def split(p, q, d):
+			pd = p.key[d]
+			qd = q.key[d]
+			t = node(qd)
+			if   pd <  qd: t.m = q; t.l = node(pd, m=p)
+			elif pd == qd: t.m = split(p, q, d+1);
+			elif pd >  qd: t.m = q; t.r = node(pd, m=p)
+			return t
 		def insert(n, d):
-			sys.stderr.write('-->' + str(n) + ' ' + str(d) + '\n')
-			if d >= len(symbol):
-				sys.stderr.write(str((d, len(symbol), symbol,n))+'\n')
-				print self
+			#sys.stderr.write('-->' + str(n) + ' ' + str(d) + '\n')
 			ch = symbol[d]
 			if n == None:
-				sys.stderr.write('case0\n')
-				#sys.stderr.write(str((symbol, n.key, n.ch, ch))+'\n')
 				return node(ch, key=symbol, val=obj)
 			if not n.internal():
-				return split(d, n)
-			if d+1 == len(symbol) and ch == n.ch:
-				if n.accepting and n.key == symbol:
-					sys.stderr.write('case5\n')
-					sys.stderr.write(str((symbol, n.key, n.ch, ch))+'\n')
-					n.val = obj
-					return n
-				elif n.accepting:
-					sys.stderr.write('case6\n')
-					sys.stderr.write(str((symbol, n.key, n.ch, ch))+'\n')
-				else:
-					sys.stderr.write('case7\n')
-					sys.stderr.write(str((symbol, n.key, n.ch, ch))+'\n')
-					#new = node(ch, key=symbol, val=obj)
-					n.key = symbol
-					n.val = obj
-					n.accepting = True
-					#if ch <  n.ch: new.r = n
-					#if ch == n.ch: new.m = n
-					#if ch >  n.ch: new.l = n
-					return n
-			sys.stderr.write('case8\n')
-			sys.stderr.write(str((symbol, n.key, n.ch, ch, ch<n.ch, ch==n.ch, ch>n.ch))+'\n')
+				return split(node(ch, key=symbol, val=obj), n, d)
 			if   ch <  n.ch: n.l = insert(n.l, d)
 			elif ch == n.ch: n.m = insert(n.m, d+1)
 			elif ch >  n.ch: n.r = insert(n.r, d)
 			return n
 		#print
 		#print
-		sys.stderr.write('\n\n\ninsert ' + symbol + ' ' + str(obj)+'\n')
-		self.root = insert(self.root, 0)
+		#sys.stderr.write('\n\n\ninsert ' + symbol + ' ' + str(obj)+'\n')
+		self.heads[ord(symbol[0])] = insert(self.heads[ord(symbol[0])], 1)
+		#self.root = insert(self.root, 0)
 
 	def __getitem__(self, symbol):
-		def get(n, d):
-			sys.stderr.write(str(n)+'\n')
+		symbol += END
+		next = (self.heads[ord(symbol[0])], 1)
+		while next:
+			n, d = next
+			#sys.stderr.write(str(n)+'\n')
 			if n == None:
 				raise KeyError, "Symbol '%s' is not in table." % symbol
-			#print d, len(symbol)
-			if n.accepting and d+1 == len(symbol) and d+1 == len(n.key):
-				if n.key == symbol:
-					return n.val
 			if n.internal():
 				ch = symbol[d]
-				if   ch <  n.ch: return get(n.l, d)
-				elif ch == n.ch: return get(n.m, d+1)
-				elif ch >  n.ch: return get(n.r, d)
-			if n.key == symbol:
+				if   ch <  n.ch: next = (n.l, d);   continue
+				elif ch == n.ch: next = (n.m, d+1); continue
+				elif ch >  n.ch: next = (n.r, d);   continue
+			elif n.key == symbol:
 				return n.val
 			raise KeyError, "Symbol '%s' is not in table." % symbol
-		sys.stderr.write('\n\n\nget ' + symbol +'\n')
-		return get(self.root, 0)
+		#should never reach ...
+		raise KeyError, "Symbol '%s' is not in table." % symbol
 
 	def __delitem__(self, symbol):
-		pass
+		symbol += END
+		def remove(n, d):
+			#sys.stderr.write('-->' + str(n) + ' ' + str(d) + '\n')
+			if n == None:
+				raise KeyError, "Symbol '%s' is not in table." % symbol
+			if n.internal():
+				ch = symbol[d]
+				if   ch <  n.ch: n.l = remove(n.l, d)
+				elif ch == n.ch: n.m = remove(n.m, d+1)
+				elif ch >  n.ch: n.r = remove(n.r, d)
+			else:
+				if n.key == symbol:
+					return None
+				else:
+					raise KeyError, "Symbol '%s' is not in table." % symbol
+			return n
+		self.heads[ord(symbol[0])] = remove(self.heads[ord(symbol[0])], 1)
 
-	def __iter__(self):
-		pass
+	#def __iter__(self):
+		#pass
 
-	def __contains__(self, symbol):
-		pass
+	#def __contains__(self, symbol):
+		#pass
 
-	def __str__(self):
-		q = deque()
-		q.append((self.root, 0))
-		i = 0
-		nodes = dict()
-		edges = dict()
-		while len(q) > 0:
-			n, m = q.pop()
-			if not n: continue
-			q.append((n.r, 0))
-			q.append((n.m, 1))
-			q.append((n.l, 2))
-			if n not in nodes:
-				#sys.stderr.write(str(m) + ' ' + str(n.accepting) + '\n')
-				nodes[n] = ('node' + str(i), m, n.accepting)
-				i += 1
-			if n not in edges:
-				edges[n] = list()
-			if n.l != None: edges[n].append(n.l)
-			if n.m != None: edges[n].append(n.m)
-			if n.r != None: edges[n].append(n.r)
-		s = 'digraph tst {\n'
-		for k,v in nodes.iteritems():
-			name, shape, accept = v
-			style = ''
-			if accept: style = 'style="filled" fillcolor="#63ADD0"'
-			if shape == 1: n = '%s[shape="box" %s label="%s"];\n' % (name, style, str(k))
-			elif shape == 2: n = '%s[shape="diamond" %s label="%s"];\n' % (name, style, str(k))
-			else: n = '%s[%s label="%s"];\n' % (name, style, str(k))
-			s += n
-			#sys.stderr.write(n)
-		for k,v in edges.iteritems():
-			n1, a, b = nodes[k]
-			for e in v:
-				n2, a, b = nodes[e]
-				s += '%s -> %s;\n' % (n1, n2)
-		s += '}\n'
-		return s
+	#def __str__(self):
+		#q = deque()
+		#q.append((self.root, 0))
+		#i = 0
+		#nodes = dict()
+		#edges = dict()
+		#while len(q) > 0:
+			#n, m = q.pop()
+			#if not n: continue
+			#q.append((n.r, 0))
+			#q.append((n.m, 1))
+			#q.append((n.l, 2))
+			#if n not in nodes:
+				###sys.stderr.write(str(m) + ' ' + str(n.accepting) + '\n')
+				#nodes[n] = ('node' + str(i), m, n.accepting)
+				#i += 1
+			#if n not in edges:
+				#edges[n] = list()
+			#if n.l != None: edges[n].append(n.l)
+			#if n.m != None: edges[n].append(n.m)
+			#if n.r != None: edges[n].append(n.r)
+		#s = 'digraph tst {\n'
+		#for k,v in nodes.iteritems():
+			#name, shape, accept = v
+			#style = ''
+			#label = '\\' + str(k)
+			#if accept: style = 'style="filled" fillcolor="#63ADD0"'
+			#if shape == 1: n = '%s[shape="box" %s label="%s"];\n' % (name, style, label)
+			#elif shape == 2: n = '%s[shape="diamond" %s label="%s"];\n' % (name, style, label)
+			#else: n = '%s[%s label="%s"];\n' % (name, style, label)
+			#s += n
+			###sys.stderr.write(n)
+		#for k,v in edges.iteritems():
+			#n1, a, b = nodes[k]
+			#for e in v:
+				#n2, a, b = nodes[e]
+				#s += '%s -> %s;\n' % (n1, n2)
+		#s += '}\n'
+		#return s
 
-	def __repr__(self):
-		return str(self)
+	#def __repr__(self):
+		#return str(self)
 
 class node(object):
 	'''A node of a TST'''
+	__slots__ = ['ch', 'key', 'val', 'l', 'm', 'r', 'accepting']
 
 	def __init__(self, ch, key=None, val=NOITEM, m=None):
-		#if ch == END:
-			#assert key != None
-			#assert val != NOITEM
-			#assert m == None
-		#else:
-			#assert key == None
-			#assert val == NOITEM
-			#assert m != None
 		self.ch = ch
 		self.key = key
 		self.val = val
@@ -208,21 +163,25 @@ class node(object):
 	def internal(self):
 		return self.l != None or self.m != None or self.r != None
 
-	def __hash__(self):
-		return hash((self.ch, self.key, self.val, self.l, self.m, self.r, self.accepting))
+	#def __hash__(self):
+		#return hash((self.ch, self.key, self.val, self.l, self.m, self.r, self.accepting))
 
-	def __eq__(self, a):
-		return hash(self) == hash(a)
+	#def __eq__(self, a):
+		#return hash(self) == hash(a)
 
-	def __ne__(self, a):
-		return hash(self) != hash(a)
+	#def __ne__(self, a):
+		#return hash(self) != hash(a)
 
-	def __str__(self):
-		if self.accepting: return "%s %s %s" % (self.ch, self.key, str(self.val))
-		return self.ch
+	#def __str__(self):
+		#ch = self.ch
+		#k = self.key
+		#if ch == END: ch = r'\0'
+		#if k: k = k[:-1]
+		#if self.accepting: return "%s %s %s" % (ch, k, str(self.val))
+		#return ch
 
-	def __repr__(self):
-		return str(self)
+	#def __repr__(self):
+		#return str(self)
 
 if __name__ == '__main__':
 	t = TST()
