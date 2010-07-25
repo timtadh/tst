@@ -10,7 +10,6 @@ from os.path import sep as PATH_SEP
 import sys
 
 END = '\x00'
-NOITEM = type('NOITEM', (object,), {'__str__':lambda self: 'NOITEM', '__repr__':lambda self: 'NOITEM'})()
 
 class TST(object):
 	'''A TST based symbol table:
@@ -149,44 +148,6 @@ class TST(object):
 			q.append((n.m, m+1))
 			q.append((n.l, m+1))
 		return s
-		#q = deque()
-		#i = 0
-		#nodes = dict()
-		#edges = dict()
-		#q.append((self.root, 0))
-		#while len(q) > 0:
-			#n, m = q.pop()
-			#if not n: continue
-			#q.append((n.r, 0))
-			#q.append((n.m, 1))
-			#q.append((n.l, 2))
-			#if n not in nodes:
-				####sys.stderr.write(str(m) + ' ' + str(n.accepting) + '\n')
-				#nodes[n] = ('node' + str(i), m, n.accepting)
-				#i += 1
-			#if n not in edges:
-				#edges[n] = list()
-			#if n.l != None: edges[n].append(n.l)
-			#if n.m != None: edges[n].append(n.m)
-			#if n.r != None: edges[n].append(n.r)
-		#s = 'digraph tst {\n'
-		#for k,v in nodes.iteritems():
-			#name, shape, accept = v
-			#style = ''
-			#label = '\\' + str(k)
-			#if accept: style = 'style="filled" fillcolor="#63ADD0"'
-			#if shape == 1: n = '%s[shape="box" %s label="%s"];\n' % (name, style, label)
-			#elif shape == 2: n = '%s[shape="diamond" %s label="%s"];\n' % (name, style, label)
-			#else: n = '%s[%s label="%s"];\n' % (name, style, label)
-			#s += n
-			####sys.stderr.write(n)
-		#for k,v in edges.iteritems():
-			#n1, a, b = nodes[k]
-			#for e in v:
-				#n2, a, b = nodes[e]
-				#s += '%s -> %s;\n' % (n1, n2)
-		#s += '}\n'
-		#return s
 
 	def __repr__(self):
 		return str(self)
@@ -195,7 +156,7 @@ class node(object):
 	'''A node of a TST'''
 	__slots__ = ['ch', 'key', 'val', 'l', 'm', 'r', 'accepting']
 
-	def __init__(self, ch, key=None, val=NOITEM, m=None):
+	def __init__(self, ch, key=None, val=None, m=None):
 		self.ch = ch
 		self.key = key
 		self.val = val
@@ -208,15 +169,6 @@ class node(object):
 	def internal(self):
 		return self.l != None or self.m != None or self.r != None
 
-	#def __hash__(self):
-		#return hash((self.ch, self.key, self.val, self.l, self.m, self.r, self.accepting))
-
-	#def __eq__(self, a):
-		#return hash(self) == hash(a)
-
-	#def __ne__(self, a):
-		#return hash(self) != hash(a)
-
 	def __str__(self):
 		ch = self.ch
 		k = self.key
@@ -227,31 +179,3 @@ class node(object):
 
 	def __repr__(self):
 		return str(self)
-
-if __name__ == '__main__':
-	t = TST()
-	t['b'] = 2
-	t['a'] = 1
-	print '{\n', t, '\n}'
-	t['a'] = 10
-	print '{\n', t, '\n}'
-	t['d'] = 4
-	t['daf'] = 5
-	t['db'] = 6
-	print '{\n', t, '\n}'
-	t['dac'] = 3
-	print '{\n', t, '\n}'
-	print 'b', t['b']
-	print 'a', t['a']
-	print 'daf', t['daf']
-	print 'dac', t['dac']
-	print 'd', t['d']
-	print 'db', t['db']
-	#t['cddda'] = 6
-	#print '>', t
-	#t['cd'] = 7
-	#print '>', t
-	#t['cd'] = 8
-	#print '>', t
-	#t['cde'] = 9
-	#print '>', t

@@ -195,8 +195,8 @@ class TestTable(unittest.TestCase):
 		sys.stderr.write(str(round(e-s, 5)*i)+'\n\n')
 
 	def test_time(self):
-		size = 100000
-		i =    1000
+		size = 1000
+		i =    100
 		#self.itertest(size, i)
 		#s = set()
 		l = list()
