@@ -44,17 +44,27 @@ class TST(object):
 			return t
 		def insert(n, d):
 			#sys.stderr.write('-->' + str(n) + ' ' + str(d) + '\n')
-			ch = symbol[d]
 			if n == None:
+				if d == len(symbol): ch = '\0'
+				else: ch = symbol[d]
 				return node(ch, key=symbol, val=obj)
 			if not n.internal():
-				return split(node(ch, key=symbol, val=obj), n, d)
+				#sys.stderr.write('leaf node' + '\n')
+				if len(n.key) == len(symbol) and n.key == symbol:
+					#sys.stderr.write('same node' + '\n')
+					n.val = obj
+					return n
+				else:
+					#sys.stderr.write('different node' + '\n')
+					ch = symbol[d]
+					return split(node(ch, key=symbol, val=obj), n, d)
+			ch = symbol[d]
+			#sys.stderr.write('internal node' + '\n')
+			#sys.stderr.write('node' + ' ' + str(n.l) + ' ' + str(n.m) + ' ' + str(n.r) + '\n')
 			if   ch <  n.ch: n.l = insert(n.l, d)
 			elif ch == n.ch: n.m = insert(n.m, d+1)
 			elif ch >  n.ch: n.r = insert(n.r, d)
 			return n
-		#print
-		#print
 		#sys.stderr.write('\n\n\ninsert ' + symbol + ' ' + str(obj)+'\n')
 		self.heads[ord(symbol[0])] = insert(self.heads[ord(symbol[0])], 1)
 		#self.root = insert(self.root, 0)
@@ -64,9 +74,9 @@ class TST(object):
 		next = (self.heads[ord(symbol[0])], 1)
 		while next:
 			n, d = next
-			#sys.stderr.write(str(n)+'\n')
+			##sys.stderr.write(str(n)+'\n')
 			if n == None:
-				raise KeyError, "Symbol '%s' is not in table." % symbol
+				raise KeyError, "Symbol '%s' is not in table." % symbol[:-1]
 			if n.internal():
 				ch = symbol[d]
 				if   ch <  n.ch: next = (n.l, d);   continue
@@ -74,27 +84,32 @@ class TST(object):
 				elif ch >  n.ch: next = (n.r, d);   continue
 			elif n.key == symbol:
 				return n.val
-			raise KeyError, "Symbol '%s' is not in table." % symbol
+			raise KeyError, "Symbol '%s' is not in table." % symbol[:-1]
 		#should never reach ...
-		raise KeyError, "Symbol '%s' is not in table." % symbol
+		raise KeyError, "Symbol '%s' is not in table." % symbol[:-1]
 
 	def __delitem__(self, symbol):
 		symbol += END
+		def check(n):
+			if n == None: return None
+			if not n.internal() and n.key == None:
+				return None
+			return n
 		def remove(n, d):
-			#sys.stderr.write('-->' + str(n) + ' ' + str(d) + '\n')
+			##sys.stderr.write('-->' + str(n) + ' ' + str(d) + '\n')
 			if n == None:
 				raise KeyError, "Symbol '%s' is not in table." % symbol
 			if n.internal():
 				ch = symbol[d]
-				if   ch <  n.ch: n.l = remove(n.l, d)
-				elif ch == n.ch: n.m = remove(n.m, d+1)
-				elif ch >  n.ch: n.r = remove(n.r, d)
+				if   ch <  n.ch: n.l = check(remove(n.l, d))
+				elif ch == n.ch: n.m = check(remove(n.m, d+1))
+				elif ch >  n.ch: n.r = check(remove(n.r, d))
 			else:
 				if n.key == symbol:
 					return None
 				else:
 					raise KeyError, "Symbol '%s' is not in table." % symbol
-			return n
+			return check(n)
 		self.heads[ord(symbol[0])] = remove(self.heads[ord(symbol[0])], 1)
 
 	#def __iter__(self):
@@ -103,12 +118,42 @@ class TST(object):
 	#def __contains__(self, symbol):
 		#pass
 
-	#def __str__(self):
+	def __str__(self):
+		s = ''
+		q = deque()
+		#for i,x in enumerate(self.heads):
+			#if x == None: continue
+			#s += "head: " + chr(i) + '\n'
+			#q.append((x, 1))
+		j = 0
+		while 1:
+			if not q and j >= len(self.heads):
+				break
+			elif not q:
+				h = None
+				end = False
+				while h == None:
+					h = self.heads[j]
+					j += 1
+					if j >= len(self.heads):
+						end = True
+						break
+				if h:
+					s += "head: " + chr(j-1) + '\n'
+					q.append((h, 1))
+				continue
+			n, m = q.pop()
+			if not n: continue
+			s += ' '*m + str(n) + '\n'
+			q.append((n.r, m+1))
+			q.append((n.m, m+1))
+			q.append((n.l, m+1))
+		return s
 		#q = deque()
-		#q.append((self.root, 0))
 		#i = 0
 		#nodes = dict()
 		#edges = dict()
+		#q.append((self.root, 0))
 		#while len(q) > 0:
 			#n, m = q.pop()
 			#if not n: continue
@@ -116,7 +161,7 @@ class TST(object):
 			#q.append((n.m, 1))
 			#q.append((n.l, 2))
 			#if n not in nodes:
-				###sys.stderr.write(str(m) + ' ' + str(n.accepting) + '\n')
+				####sys.stderr.write(str(m) + ' ' + str(n.accepting) + '\n')
 				#nodes[n] = ('node' + str(i), m, n.accepting)
 				#i += 1
 			#if n not in edges:
@@ -134,7 +179,7 @@ class TST(object):
 			#elif shape == 2: n = '%s[shape="diamond" %s label="%s"];\n' % (name, style, label)
 			#else: n = '%s[%s label="%s"];\n' % (name, style, label)
 			#s += n
-			###sys.stderr.write(n)
+			####sys.stderr.write(n)
 		#for k,v in edges.iteritems():
 			#n1, a, b = nodes[k]
 			#for e in v:
@@ -143,8 +188,8 @@ class TST(object):
 		#s += '}\n'
 		#return s
 
-	#def __repr__(self):
-		#return str(self)
+	def __repr__(self):
+		return str(self)
 
 class node(object):
 	'''A node of a TST'''
@@ -172,29 +217,30 @@ class node(object):
 	#def __ne__(self, a):
 		#return hash(self) != hash(a)
 
-	#def __str__(self):
-		#ch = self.ch
-		#k = self.key
-		#if ch == END: ch = r'\0'
-		#if k: k = k[:-1]
-		#if self.accepting: return "%s %s %s" % (ch, k, str(self.val))
-		#return ch
+	def __str__(self):
+		ch = self.ch
+		k = self.key
+		if ch == END: ch = r'\0'
+		if k: k = k[:-1]
+		if self.accepting: return "%s %s %s" % (ch, k, str(self.val))
+		return ch
 
-	#def __repr__(self):
-		#return str(self)
+	def __repr__(self):
+		return str(self)
 
 if __name__ == '__main__':
 	t = TST()
 	t['b'] = 2
-	print '>', t
 	t['a'] = 1
-	print '>', t
+	print '{\n', t, '\n}'
+	t['a'] = 10
+	print '{\n', t, '\n}'
 	t['d'] = 4
 	t['daf'] = 5
 	t['db'] = 6
-	print '>', t
+	print '{\n', t, '\n}'
 	t['dac'] = 3
-	print '>', t
+	print '{\n', t, '\n}'
 	print 'b', t['b']
 	print 'a', t['a']
 	print 'daf', t['daf']
