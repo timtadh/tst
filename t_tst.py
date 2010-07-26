@@ -36,32 +36,6 @@ class TestTable(unittest.TestCase):
 				self.assertEquals(tv, v, msg='%s, %s %s' % (k, str(v), str(tv)))
 		return True
 
-
-	def insert_tester2(self, t, tup, s):
-		for k, v in tup:
-			t[k] = v
-		for k, v in tup:
-			try: t[k] = v
-			except:
-				print t
-				print k, v, t[k]
-				raise
-		for k, v in tup:
-			self.assertEquals(t[k], v)
-		l = list(tup)
-		l.reverse()
-		for k, v in l:
-			try: tv = t[k]
-			except KeyError:
-				print t
-				self.fail('key %s should be in table, %s' % (k, str(k in s)))
-			if tv != v:
-				print t
-				print 'arg'
-			self.assertEquals(tv, v, msg='%s, %s %s' % (k, str(v), str(tv)))
-		return True
-
-
 	def insert_tester3(self, t, l1, l2):
 		for k, v in l1:
 			t[k] = v
@@ -153,7 +127,7 @@ class TestTable(unittest.TestCase):
 		s = time.time()
 		self.insert_tester3(t, l1, l2)
 		e = time.time()
-		sys.stderr.write('complete: '+str(round(e-s, 5))+'\n')
+		sys.stderr.write('\ncomplete: '+str(round(e-s, 5))+'\n')
 		#print t
 
 	def test_remove(self):
@@ -168,6 +142,74 @@ class TestTable(unittest.TestCase):
 		e = time.time()
 		sys.stderr.write('\nremove: '+str(round(e-s, 5))+'\n')
 			#print t
+
+	def test_keys(self):
+		s = set()
+		l1 = list()
+		t = TST()
+		for x in xrange(100):
+			k = base64.b64encode(os.urandom(x%10 + 1)).rstrip('=')
+			if k in s: continue
+			l1.append(k)
+			t[k] = x
+			s.add(k)
+		l1.sort()
+		self.assertEquals(l1, t.keys())
+
+	def test_iteritems(self):
+		s = set()
+		l1 = list()
+		t = TST()
+		for x in xrange(100):
+			k = base64.b64encode(os.urandom(x%10 + 1)).rstrip('=')
+			if k in s: continue
+			l1.append((k, x))
+			t[k] = x
+			s.add(k)
+		l1.sort()
+		self.assertEquals(l1, list(t.iteritems()))
+
+	def test__iter__(self):
+		s = set()
+		l1 = list()
+		t = TST()
+		for x in xrange(100):
+			k = base64.b64encode(os.urandom(x%10 + 1)).rstrip('=')
+			if k in s: continue
+			l1.append(k)
+			t[k] = x
+			s.add(k)
+		l1.sort()
+		self.assertEquals(l1, list(t))
+
+	def test__contains__(self):
+		s = set()
+		l1 = list()
+		t = TST()
+		for x in xrange(100):
+			k = base64.b64encode(os.urandom(x%10 + 1)).rstrip('=')
+			if k in s: continue
+			l1.append(k)
+			t[k] = x
+			s.add(k)
+		l1.sort()
+		for x in l1:
+			assert x in t
+			assert 'hello my darlin\'' not in t
+
+	def test_find_simple(self):
+		s = set()
+		l1 = list()
+		t = TST()
+		for x in xrange(100):
+			k = base64.b64encode(os.urandom(x%10 + 1)).rstrip('=')
+			if k in s: continue
+			l1.append(k)
+			t[k] = x
+			s.add(k)
+		l1.sort()
+		for x in l1:
+			assert bool(tuple(t.find(x)))
 
 	def itertest(self, size, i):
 		sys.stderr.write('\n')
@@ -195,7 +237,8 @@ class TestTable(unittest.TestCase):
 		sys.stderr.write(str(round(e-s, 5)*i)+'\n\n')
 
 	def test_time(self):
-		size = 1000
+		sys.stderr.write('\n')
+		size = 10000
 		i =    100
 		#self.itertest(size, i)
 		#s = set()
@@ -222,6 +265,241 @@ class TestTable(unittest.TestCase):
 			e = time.time()
 			sys.stderr.write(str(round(e-s, 7))+'\n\n')
 		#print t
+
+	def test_match(self):
+		t = TST(sep=None)
+		t['what'] = 1
+		t['where'] = 1
+		t['when'] = 1
+		t['widget'] = 1
+		t['wizard'] = 1
+		t['wow'] = 1
+		t['wowo'] = 1
+		self.assertEquals(dict(t.find('w*e*')), {'where':1,'when':1,'widget':1})
+		self.assertEquals(dict(t.find('*e')), {'where':1})
+		self.assertEquals(dict(t.find('*et')), {'widget':1})
+		self.assertEquals(dict(t.find('wo*')), {'wow':1, 'wowo':1})
+		self.assertEquals(dict(t.find('*a*')), {'what':1, 'wizard':1})
+		self.assertEquals(dict(t.find('*za*')), {'wizard':1})
+		for k in t.keys():
+			self.assertEquals(dict(t.find(k)), {k:1})
+		self.assertEquals(dict(t.find('*dg*')), {'widget':1})
+		self.assertEquals(dict(t.find('*he*')), {'when':1, 'where':1})
+		#print t
+
+	#######################################d#
+	def insert(self,t):
+		t['a'] = 1
+		t['aa'] = 2
+		t['aaa'] = 3
+
+	def paths(self, t):
+		t['binary/WEB-INF/tiles/footer/footer.jsp'] = 1
+		t['binary/WEB-INF/tiles/form/addAccountForm.jsp'] = 2
+		t['binary/WEB-INF/tiles/menu/menu_empty.jsp'] = 3
+		t['binary/addAccount.jsp'] = 4
+		t['source/dist/WEB-INF/tiles/menu/menu_empty.jsp'] = 5
+		t['source/dist/addClient.jsp'] = 6
+
+	def test_insert_(self):
+		t = TST()
+		self.insert(t)
+		self.assertEquals(dict(t), {'a':1,'aa':2,'aaa':3})
+		self.assertEquals(dict(t.find('*')), {'a':1,'aa':2,'aaa':3})
+
+	def test_remove_(self):
+		t = TST()
+		self.insert(t)
+		del t['aaa']
+		self.assertEquals(dict(t), {'a':1,'aa':2})
+		self.assertEquals(dict(t.find('*')), {'a':1,'aa':2})
+		del t['aa']
+		self.assertEquals(dict(t), {'a':1,})
+		self.assertEquals(dict(t.find('*')), {'a':1,})
+		del t['a']
+		self.assertEquals(dict(t), {})
+		self.assertEquals(dict(t.find('*')), {})
+		self.insert(t)
+		self.assertEquals(dict(t), {'a':1,'aa':2,'aaa':3})
+		self.assertEquals(dict(t.find('*')), {'a':1,'aa':2,'aaa':3})
+
+	def test_find_(self):
+		t = TST()
+		self.paths(t)
+		self.assertEquals(dict(t),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			})
+		self.assertEquals(dict(t.find('*')), {})
+		self.assertEquals(dict(t.find('**')),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			})
+		self.assertEquals(dict(t.find('**.jsp')),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			})
+		self.assertEquals(dict(t.find('binary/**.jsp')),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+			})
+		self.assertEquals(dict(t.find('binary/*.jsp')),
+			{
+				'binary/addAccount.jsp' : 4,
+			})
+		self.assertEquals(dict(t.find('*/*/*.jsp')),
+			{
+				'source/dist/addClient.jsp' : 6,
+			})
+
+	def test_find_nosep(self):
+		t = TST(sep=None)
+		self.paths(t)
+		self.assertEquals(dict(t),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			})
+		self.assertEquals(dict(t.find('*')),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			})
+		self.assertEquals(dict(t.find('**')),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			})
+
+	def test__iter___(self):
+		t = TST()
+		self.paths(t)
+		l1 = [x for x in t]
+		l2 = dict(t).keys()
+		l2.sort()
+		self.assertEquals(l1, l2)
+
+
+	def test__contains___(self):
+		t = TST()
+		self.paths(t)
+		self.assertTrue('binary/**.jsp' in t)
+		self.assertFalse('binary/WEB-INF/*.jsp' in t)
+		self.assertFalse('source/*.jsp' in t)
+		self.assertTrue('**' in t)
+		self.assertFalse('*' in t)
+		self.assertTrue('binary/WEB-INF/tiles/footer/footer.jsp' in t)
+		for x in dict(t):
+			self.assertTrue(x in t)
+
+	def test__contains___nosep(self):
+		t = TST(sep=None)
+		self.paths(t)
+		self.assertTrue('binary/**.jsp' in t)
+		self.assertTrue('binary/WEB-INF/*.jsp' in t)
+		self.assertTrue('source/*.jsp' in t)
+		self.assertTrue('**' in t)
+		self.assertTrue('*' in t)
+		self.assertTrue('binary/WEB-INF/tiles/footer/footer.jsp' in t)
+		for x in dict(t):
+			self.assertTrue(x in t)
+		self.assertFalse('*x*' in t)
+
+
+	def test_q(self):
+		t = TST()
+		t['a'] =1
+		t['b'] =1
+		t['c'] =1
+		self.assertTrue(set(dict(t.find('?')).keys()), set(t.keys()))
+		t = TST()
+		t['/a'] = 1
+		t['/b'] = 1
+		t['/c'] = 1
+		self.assertEquals(set(dict(t.find('??')).keys()), set())
+		self.assertEquals(set(dict(t.find('/?')).keys()), set(t.keys()))
+		t = TST()
+		t['dog'] = 1
+		t['dig'] = 1
+		t['dug'] = 1
+		self.assertEquals(set(dict(t.find('d?g')).keys()),set(t.keys()))
+
+	def test_q_nosep(self):
+		t = TST(sep=None)
+		t['a'] =1
+		t['b'] =1
+		t['c'] =1
+		self.assertTrue(set(dict(t.find('?')).keys()), set(t.keys()))
+		t = TST(sep=None)
+		t['/a'] = 1
+		t['/b'] = 1
+		t['/c'] = 1
+		self.assertEquals(set(dict(t.find('??')).keys()), set(t.keys()))
+		self.assertEquals(set(dict(t.find('/?')).keys()), set(t.keys()))
+
+	def test_find_q(self):
+		t = TST()
+		self.paths(t)
+		self.assertEquals(dict(t.find('??????/**/*.jsp')),
+			{
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			})
+
+	def test_find_r(self):
+		t = TST()
+		self.paths(t)
+		self.assertEquals(dict(t.find('*/*.jsp')),
+			{
+				'binary/addAccount.jsp' : 4
+			})
+
+	def test_copyctor(self):
+		d = {
+				'binary/WEB-INF/tiles/footer/footer.jsp' : 1,
+				'binary/WEB-INF/tiles/form/addAccountForm.jsp' : 2,
+				'binary/WEB-INF/tiles/menu/menu_empty.jsp' : 3,
+				'binary/addAccount.jsp' : 4,
+				'source/dist/WEB-INF/tiles/menu/menu_empty.jsp' : 5,
+				'source/dist/addClient.jsp' : 6,
+			}
+		self.assertEquals(dict(TST(d)), d)
+		self.assertEquals(dict(TST(TST(d))), d)
+		self.assertEquals(dict(TST((k,v) for k,v in d.iteritems())), d)
 
 
 if __name__ == '__main__':
