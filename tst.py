@@ -29,7 +29,7 @@ class TST(MutableMapping):
 		works on byte strings if you are using unicode strings encode to a byte
 		string before passing it to this class
 		ex:
-		>>> x = u'\u03A0'
+		>>> x = u'\u03A0'  # capital greek letter Pi
 		>>> x
 		u'\u03a0'
 		>>> x.encode('utf8')
@@ -43,51 +43,58 @@ class TST(MutableMapping):
 		File "tst.py", line 241, in __setitem__
 			self.heads[ord(symbol[0])] = insert(self.heads[ord(symbol[0])], 1)
 		IndexError: list index out of range
-		>>>
+
+		a good python unicode resource can be found at:
+		http://boodebr.org/main/python/all-about-python-and-unicode
 
 
+	TST supports flexible matching using Java style glob patterns. However
+	if you can override this behavior, and use a non-java glob interpretation.
+	The Java vs. Non-Java glob are controlled by whether or not a path seperator
+	has been set. By default it is set to os.path.sep and therefore uses Java
+	style matching.
 
-	Supports flexible matching using Java style glob patterns. However
-	if you can override this behavior. examples:
+	Syntax to Regular Expression:
+		if sep != None:
+			**    --> .*
+			**SEP --> .*
+			*     --> [^SEP]*
+			?     --> [^SEP]
+			c     --> c        ie. any other character is just that character
 
-	t = TST()
-	Java Glob Matching:
-		SEP = os.path.sep [eg. '/' on unix]
-		**/*.jsp = .*[^/]*\.jsp
-		/**/*.jsp = /.*[^/]*\.jsp
-		binary/**/WEB-INF/*.jsp = binary/.*WEB-INF/[^/]*\.jsp
-		???/*.jsp = [^/][^/][^/]/[^/]*\.jsp
+		if sep == None:
+			** --> .*
+			*  --> .*
+			?  --> .
+			c  -->             ie. any other character is just that character
 
-	t = TST(sep=None)
-	Flexible Matching
-		SEP = None
-		**/*.jsp = .*/.*\.jsp
-		/**/*.jsp = /.*/.*\.jsp
-		binary/**/WEB-INF/*.jsp = binary/.*/WEB-INF/.*\.jsp
-		???/*.jsp = .../.*\.jsp
+	Examples:
+		t = TST()
+		Java Glob Matching:
+			SEP = os.path.sep [eg. '/' on unix]
+			**/*.jsp = .*[^/]*\.jsp
+			/**/*.jsp = /.*[^/]*\.jsp
+			binary/**/WEB-INF/*.jsp = binary/.*WEB-INF/[^/]*\.jsp
+			???/*.jsp = [^/][^/][^/]/[^/]*\.jsp
 
-	you can set sep to any character ex:
-	t = TST(sep=':')
-	Custom SEP:
-		SEP = ':'
-		**/*.jsp = .*/[^:]*\.jsp
-		/**/*.jsp = /.*/[^:]*\.jsp
-		binary/**/WEB-INF/*.jsp = binary/.*/WEB-INF/[^:]*\.jsp
-		???/*.jsp = [^:][^:][^:]/[^:]*\.jsp
-		*/lib/*:/bin/*:** = [^:]*/lib/[^:]*:/bin/[^:]*:.*
+		t = TST(sep=None)
+		Flexible Matching
+			SEP = None
+			**/*.jsp = .*/.*\.jsp
+			/**/*.jsp = /.*/.*\.jsp
+			binary/**/WEB-INF/*.jsp = binary/.*/WEB-INF/.*\.jsp
+			???/*.jsp = .../.*\.jsp
 
-	if sep != None:
-		**    --> .*
-		**SEP --> .*
-		*     --> [^SEP]*
-		?     --> [^SEP]
-		c     --> c        ie. any other character is just that character
+		you can set sep to any character ex:
+		t = TST(sep=':')
+		Custom SEP:
+			SEP = ':'
+			**/*.jsp = .*/[^:]*\.jsp
+			/**/*.jsp = /.*/[^:]*\.jsp
+			binary/**/WEB-INF/*.jsp = binary/.*/WEB-INF/[^:]*\.jsp
+			???/*.jsp = [^:][^:][^:]/[^:]*\.jsp
+			*/lib/*:/bin/*:** = [^:]*/lib/[^:]*:/bin/[^:]*:.*
 
-	if sep == None:
-		** --> .*
-		*  --> .*
-		?  --> .
-		c  -->             ie. any other character is just that character
 	'''
 
 	def __init__(self, *args, **kwargs):
