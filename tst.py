@@ -24,6 +24,29 @@ class TST(MutableMapping):
 	'''
 	A TST based symbol table:
 	see Algorithms in (C|C++|Java) by Robert Sedgewick Ch. 15 Section 4
+
+	NB:
+		works on byte strings if you are using unicode strings encode to a byte
+		string before passing it to this class
+		ex:
+		>>> x = u'\u03A0'
+		>>> x
+		u'\u03a0'
+		>>> x.encode('utf8')
+		'\xce\xa0'
+		>>> t[x.encode('utf8')] = 123
+		>>> t
+		{'\xce\xa0': 123}
+		>>> t[x] = 123
+		Traceback (most recent call last):
+		File "<stdin>", line 1, in <module>
+		File "tst.py", line 241, in __setitem__
+			self.heads[ord(symbol[0])] = insert(self.heads[ord(symbol[0])], 1)
+		IndexError: list index out of range
+		>>>
+
+
+
 	Supports flexible matching using Java style glob patterns. However
 	if you can override this behavior. examples:
 
@@ -151,22 +174,7 @@ class TST(MutableMapping):
 		'''
 		All the keys in the table in sorted in byte order.
 		'''
-		l = list()
-		q = deque()
-		for h in self.heads:
-			if h == None: continue
-			q.appendleft(h)
-		#q.append(self.root)
-		j = 0
-		while q:
-			n = q.pop()
-			if not n: continue
-			if n.accepting:
-				l.append(n.key[:-1])
-			q.append(n.r)
-			q.append(n.m)
-			q.append(n.l)
-		return l
+		return [k for k in self]
 
 	def iteritems(self):
 		'''
@@ -192,46 +200,63 @@ class TST(MutableMapping):
 		return len(self.keys())
 
 	def __setitem__(self, symbol, obj):
+		## a modified version of the algorithm given by sedgewicks
+		## fixes some bugs
 		symbol += END
+		# node split
 		def split(p, q, d):
-			pd = p.key[d]
-			qd = q.key[d]
+			pd = p.key[d] # chr for p
+			qd = q.key[d] # chr for q
+			# get the next chr for q so we can update its ch field
 			if d+1 < len(q.key): nqd = q.key[d+1]
 			else: nqd = END
-			t = node(qd)
+			t = node(qd) # the new node that will be the parent of both p, and q
+			# update the char fields necessary, because if you don't they may be
+			# wrong and cause problems in the regex matching.
 			q.ch = nqd
 			p.ch = pd
 			if   pd <  qd: t.m = q; t.l = p
 			elif pd == qd: t.m = split(p, q, d+1);
 			elif pd >  qd: t.m = q; t.r = p
 			return t
+		# recursive insert
 		def insert(n, d):
 			if n == None:
+				# if the node is None we found the spot make a new node and
+				# return it
 				if d == len(symbol): ch = '\0'
 				else: ch = symbol[d]
 				return node(ch, key=symbol, val=obj)
 			if not n.internal():
+				# if it a leaf node we either have found the symbol or we need
+				# to split a node.
 				if len(n.key) == len(symbol) and n.key == symbol:
+					# found the symbol
 					n.val = obj
 					return n
 				else:
+					# split the node
 					ch = symbol[d]
 					return split(node(ch, key=symbol, val=obj), n, d)
+			# it is an internal node
 			ch = symbol[d]
 			if   ch <  n.ch: n.l = insert(n.l, d)
-			elif ch == n.ch: n.m = insert(n.m, d+1)
+			elif ch == n.ch: n.m = insert(n.m, d+1) # matches current chr so d+1
 			elif ch >  n.ch: n.r = insert(n.r, d)
 			return n
+		# start at the "head" of the trie rooted at the first chacter of the
+		# symbol.
 		self.heads[ord(symbol[0])] = insert(self.heads[ord(symbol[0])], 1)
 		#self.root = insert(self.root, 0)
 
 	def __getitem__(self, symbol):
+		## an iterative version of the algorithm given by sedgewick
+		## I made it iterative because it is faster that way.
 		symbol += END
 		next = (self.heads[ord(symbol[0])], 1)
 		#next = (self.root, 0)
 		while next:
 			n, d = next
-			##sys.stderr.write(str(n)+'\n')
 			if n == None:
 				raise KeyError, "Symbol '%s' is not in table." % symbol[:-1]
 			if n.internal():
@@ -246,14 +271,16 @@ class TST(MutableMapping):
 		raise KeyError, "Symbol '%s' is not in table." % symbol[:-1]
 
 	def __delitem__(self, symbol):
+		## not given by sedgewick inferred by Tim Henderson
+		## the algorithm is very similar to the get algorithm.
 		symbol += END
 		def check(n):
+			# ensure the node is valid.
 			if n == None: return None
 			if not n.internal() and n.key == None:
 				return None
 			return n
 		def remove(n, d):
-			##sys.stderr.write('-->' + str(n) + ' ' + str(d) + '\n')
 			if n == None:
 				raise KeyError, "Symbol '%s' is not in table." % symbol
 			if n.internal():
@@ -349,7 +376,8 @@ def acceptone(program, text, pc):
 	'''
 	checks one character and sees if it matches. if it does returns True and
 	a the next queue of program counters [pc] to excute. If it doesn't match
-	returns False and None.
+	returns False and None. see thompsonvm citation for a very through
+	explanation of the theory behind this algorithm.
 	'''
 	tc = 0
 	cqueue, nqueue = deque(), deque()
@@ -378,6 +406,8 @@ def thompsonvm(program, text, tc, pc):
 	'''
 	A version of the Thompson Virtual Machine as defined by Russ Cox in:
 		http://swtch.com/~rsc/regexp/regexp2.html
+		this article provides a very through explanation of regular expression
+		NFA matching as implemented in this module.
 	This version modifies the algorithm to start at a later position in the
 	string, and regular expression. Used to match the end of the string stored
 	in the leaves of the TST.
@@ -412,6 +442,8 @@ def hendersonvm(program, node, d, clist):
 	Originally implemented for a N-Way trie, this version has been modified for
 	use on a TST. For more details contact Tim Henderson at
 		tim.tadh@gmail.com or timothy.henderson@case.edu
+
+	Note this algorithm starts at text position d and with thread list clist.
 	'''
 	def addthread(l, thread):
 		if thread not in l: l.appendleft(thread)
@@ -428,7 +460,7 @@ def hendersonvm(program, node, d, clist):
 
 	if not program: return
 	if not node: return
-	#clist = deque()
+
 	nlist = deque()
 	cnodes = dict()
 	nnodes = dict()
@@ -441,11 +473,9 @@ def hendersonvm(program, node, d, clist):
 			pc = clist.popleft()
 			inst = program[pc]
 			if inst[0] == JMP:
-				#print pc, 'JMP'
 				addthread(clist, inst[1])
 				dupnodes(cnodes, pc, inst[1])
 			elif inst[0] == SPLIT:
-				#print pc, 'SPLIT'
 				addthread(clist, inst[2])
 				addthread(clist, inst[1])
 				dupnodes(cnodes, pc, inst[1])
