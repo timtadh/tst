@@ -1,10 +1,37 @@
 '''
-Cactus - The Python Task Runner
+TST - A Ternary Search Trie
 Author: Tim Henderson
-Contact: tim.tadh@hackthology.com
-Copyright (c) 2010 All Rights Reserved.
-Licensed under a BSD style license see the LICENSE file.
+Contact: tim.tadh@hackthology.com or timothy.henderson@case.edu
+
+This File: TST Implementation.
+
+Copyright (c) 2010, Tim Henderson
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name TST nor the names of its contributors may
+      be used to endorse or promote products derived from this software without
+      specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
+
 from collections import deque, MutableMapping
 from os.path import sep as PATH_SEP
 import sys, itertools
@@ -95,6 +122,26 @@ class TST(MutableMapping):
 			???/*.jsp = [^:][^:][^:]/[^:]*\.jsp
 			*/lib/*:/bin/*:** = [^:]*/lib/[^:]*:/bin/[^:]*:.*
 
+	NB:
+		Using this flexible matching only pays off verses naive use of a regex
+		loop in the case of lots of strings. For hundreds of strings this table
+		may be slower than a naive loop
+		eg.
+			set(f for f in files if re.match(p, f))
+
+		however for lots of files the TST will be increasingly faster especially
+		if the patterns prune at the root of the string.
+		eg
+			sometext*
+		rather than
+			*sometext
+
+		The TST may perform worse for *sometext as it will have to iterate
+		through every node in the trie. A better a approach than a TST in this
+		case would be a Suffix Tree however Suffix Trees are very expensive to
+		build. A TST can be the basis of a Suffix Tree. See Sedgewick for a
+		discussion.
+
 	'''
 
 	def __init__(self, *args, **kwargs):
@@ -125,6 +172,12 @@ class TST(MutableMapping):
 		ex:
 			dict(t.find('**')) (all items in the table as a python dictionary)
 		'''
+		if '*' not in pattern and '?' not in pattern:
+			try:
+				yield pattern, self[pattern]
+			except KeyError:
+				return
+			return
 		pattern += END
 		insts = list()
 		p = None
@@ -499,7 +552,7 @@ def hendersonvm(program, node, d, clist):
 							if not n.internal():
 								if thompsonvm(program, n.key, d+1, pc+1):
 									yield n.key[:-1], n.val
-							else:
+							elif n.m != None:
 								addthread(nlist, pc+1)
 								addnode(nnodes, pc+1, (n.m, d+1))
 						if (y > c or x == WILDCARD) and n.r != None:

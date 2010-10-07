@@ -50,18 +50,30 @@ class SymbolTable(object):
 
 	def find(self, pattern):
 		insts = list()
-		prev = None
+		p = None
+		pp = None
+		# the query compiler.
 		for ch in pattern:
-			if ch != '*':
+			if self.sep != None and pp == '*' and p == '*' and ch == self.sep:
+				pass
+			elif ch != '*' and ch != '?':
 				insts.append((CHAR, ord(ch), ord(ch)))
-			elif self.sep == None and prev == '*' and ch == '*':
+			elif self.sep == None and ch == '?':
+				insts.append((CHAR, WILDCARD, WILDCARD))
+			elif ch == '?':
+				i = len(insts)
+				insts.append((SPLIT, len(insts)+1, len(insts)+3))
+				insts.append((CHAR, 0, ord(self.sep)-1))
+				insts.append((JMP, len(insts)+2, 0))
+				insts.append((CHAR, ord(self.sep)+1, INF))
+			elif self.sep == None and p == '*' and ch == '*':
 				pass
 			elif self.sep == None and ch == '*':
 				i = len(insts)
 				insts.append((SPLIT, len(insts)+1, len(insts)+3))
 				insts.append((CHAR, WILDCARD, WILDCARD))
 				insts.append((JMP, i, 0))
-			elif ch == '*' and prev == '*':
+			elif ch == '*' and p == '*':
 				insts = insts[:-6]
 				i = len(insts)
 				insts.append((SPLIT, len(insts)+1, len(insts)+3))
@@ -75,7 +87,8 @@ class SymbolTable(object):
 				insts.append((JMP, len(insts)+2, 0))
 				insts.append((CHAR, ord(self.sep)+1, INF))
 				insts.append((JMP, i, 0))
-			prev = ch
+			pp = p
+			p = ch
 		insts.append((MATCH, 0, 0))
 		matches = hendersonvm(insts, self.root)
 		for match in matches:
