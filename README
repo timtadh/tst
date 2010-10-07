@@ -1,5 +1,5 @@
                     +---------------------------+
-                    | TST - Trinary Search Trie |
+                    | TST - Ternary Search Trie |
                     +---------------------------+
 
 A fast implementation of TST in Python. Supports flexible java glob style
