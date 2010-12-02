@@ -429,6 +429,14 @@ class node(object):
         if self.accepting: return "%s %s %s" % (ch, k, str(self.val))
         return ch
 
+    def __getstate__(self):
+        d = dict((attr, getattr(self, attr)) for attr in self.__slots__)
+        return d
+
+    def __setstate__(self, s):
+        for k,v in s.iteritems():
+            setattr(self, k, v)
+
     def __repr__(self):
         return str(self)
 
@@ -505,6 +513,7 @@ def hendersonvm(program, node, d, clist):
 
     Note this algorithm starts at text position d and with thread list clist.
     '''
+    #print clist, d
     def addthread(l, thread):
         if thread not in l: l.appendleft(thread)
 
@@ -514,6 +523,7 @@ def hendersonvm(program, node, d, clist):
         if node not in d[t]: d[t].add(node)
 
     def dupnodes(d, t, t2):
+        #print d
         if not d.has_key(t2):
             d[t2] = set()
         d[t2] |= d[t]
@@ -551,6 +561,7 @@ def hendersonvm(program, node, d, clist):
                         if x == c or y == c or (x < c < y) or x == WILDCARD:
                             if not n.internal():
                                 if thompsonvm(program, n.key, d+1, pc+1):
+                                    #print n.key, inst, pc, program
                                     yield n.key[:-1], n.val
                             elif n.m != None:
                                 addthread(nlist, pc+1)
@@ -565,4 +576,6 @@ def hendersonvm(program, node, d, clist):
         nnodes = dict()
         clist = nlist
         nlist = deque()
+    #print
+    #print
 
