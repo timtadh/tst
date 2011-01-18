@@ -404,6 +404,42 @@ class TST(MutableMapping):
     def __repr__(self):
         return str(self)
 
+    def dotty(self):
+        header = 'digraph TST {\nrankdir=LR;\n'
+        node = '  %s[label="", shape="circle", fillcolor="#aaffff" style="filled"];'
+        node_label = '  %s[label="%s", fillcolor="#aaffaa" style="filled"];'
+        edge = '  %s -> %s [label="%s"];'
+        edge_nolabel = '  %s -> %s;'
+        footer = '\n}\n'
+
+        nodes = list()
+        edges = list()
+
+        def dotnode(cur, parent, ch):
+            name = 'node%i' % len(nodes)
+            if cur.accepting: nodes.append(node_label % (name, cur.key[:-1]))
+            else: nodes.append(node % name)
+            #print ch is "", '"' + ch + '"', type(ch), ch[0], len(ch)
+            if ch[-1] != "\0": edges.append(edge % (parent, name, ch))
+            elif ch[-1] == "\0": edges.append(edge % (parent, name, ch[:-1]+'\\\\0'))
+            else: edges.append(edge % (parent, name, '\\\\0'))
+            if cur.l is not None: dotnode(cur.l, name, "<" + cur.ch)
+            if cur.m is not None: dotnode(cur.m, name, cur.ch)
+            if cur.r is not None: dotnode(cur.r, name, ">" + cur.ch)
+
+
+        root = 'node%i' % len(nodes)
+        nodes.append(node % root)
+
+        for k in xrange(len(self.heads)):
+            if self.heads[k] is None: continue
+            dotnode(self.heads[k], root, chr(k))
+
+        return (
+            header + '\n'.join(nodes) + '\n' + '\n'.join(edges) + footer
+        )
+
+
 class node(object):
     '''A node of a TST'''
     __slots__ = ['ch', 'key', 'val', 'l', 'm', 'r', 'accepting']
