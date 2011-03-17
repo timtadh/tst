@@ -18,5 +18,9 @@ tst['abe'] = 3
 tst['abefg'] = 4
 tst['abce'] = 5
 tst['aba'] = 6
+tst['boy'] = 7
+tst['bad'] = 8
+tst['buster'] = 9
+tst['cactus'] = 10
 
 print tst.dotty()

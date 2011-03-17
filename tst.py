@@ -406,8 +406,9 @@ class TST(MutableMapping):
 
     def dotty(self):
         header = 'digraph TST {\nrankdir=LR;\n'
-        node = '  %s[label="", shape="circle", fillcolor="#aaffff" style="filled"];'
-        node_label = '  %s[label="%s", fillcolor="#aaffaa" style="filled"];'
+        node_root = '  %s[label="%s", shape="rect"];'
+        node = '  %s[label="%s", shape="circle", fillcolor="#aaffff" style="filled"];'
+        node_acc = '  %s[label="%s", fillcolor="#aaffaa" style="filled"];'
         edge = '  %s -> %s [label="%s"];'
         edge_nolabel = '  %s -> %s;'
         footer = '\n}\n'
@@ -417,19 +418,20 @@ class TST(MutableMapping):
 
         def dotnode(cur, parent, ch):
             name = 'node%i' % len(nodes)
-            if cur.accepting: nodes.append(node_label % (name, cur.key[:-1]))
-            else: nodes.append(node % name)
+            if cur.accepting: nodes.append(node_acc % (name, cur.key[:-1]))
+            elif cur.ch == '\0': nodes.append(node % (name, '\\\\0'))
+            else: nodes.append(node % (name, cur.ch))
             #print ch is "", '"' + ch + '"', type(ch), ch[0], len(ch)
             if ch[-1] != "\0": edges.append(edge % (parent, name, ch))
             elif ch[-1] == "\0": edges.append(edge % (parent, name, ch[:-1]+'\\\\0'))
             else: edges.append(edge % (parent, name, '\\\\0'))
-            if cur.l is not None: dotnode(cur.l, name, "<" + cur.ch)
-            if cur.m is not None: dotnode(cur.m, name, cur.ch)
-            if cur.r is not None: dotnode(cur.r, name, ">" + cur.ch)
+            if cur.l is not None: dotnode(cur.l, name, "<")
+            if cur.m is not None: dotnode(cur.m, name, '=')
+            if cur.r is not None: dotnode(cur.r, name, ">")
 
 
         root = 'node%i' % len(nodes)
-        nodes.append(node % root)
+        nodes.append(node_root % (root, 'heads'))
 
         for k in xrange(len(self.heads)):
             if self.heads[k] is None: continue
