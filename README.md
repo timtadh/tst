@@ -9,30 +9,30 @@ of magnatude) on read.
 
 ##Usage
 
-  >>> from tst.tst import TST
-  >>>
-  >>> t = TST()
-  >>> t['asdf'] = object()
-  >>> t
-  {'asdf': <object object at 0x7f659d869090>}
-  >>>
-  >>> d = {"x": 12, "y" :324, "asdf": 23423}
-  >>> t.update(d)
-  >>> t
-  {'y': 324, 'x': 12, 'asdf': 23423}
-  >>> dict(t)
-  {'y': 324, 'x': 12, 'asdf': 23423}
-  >>> type(t)
-  <class 'tst.TST'>
-  >>> type(dict(t))
-  <type 'dict'>
+    >>> from tst.tst import TST
+    >>>
+    >>> t = TST()
+    >>> t['asdf'] = object()
+    >>> t
+    {'asdf': <object object at 0x7f659d869090>}
+    >>>
+    >>> d = {"x": 12, "y" :324, "asdf": 23423}
+    >>> t.update(d)
+    >>> t
+    {'y': 324, 'x': 12, 'asdf': 23423}
+    >>> dict(t)
+    {'y': 324, 'x': 12, 'asdf': 23423}
+    >>> type(t)
+    <class 'tst.TST'>
+    >>> type(dict(t))
+    <type 'dict'>
 
 It supports a find interface but it is currently too slow to use. This the experimental
 section.
 
-  >>> t.find('a*')
-  <generator object find at 0x7f659d897910>
-  >>> dict(t.find('a*'))
-  {'asdf': 23423}
-  >>>
+    >>> t.find('a*')
+    <generator object find at 0x7f659d897910>
+    >>> dict(t.find('a*'))
+    {'asdf': 23423}
+    >>>
 
