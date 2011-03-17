@@ -27,7 +27,7 @@ of magnatude) on read.
     >>> type(dict(t))
     <type 'dict'>
 
-It supports a find interface but it is currently too slow to use. This the experimental
+It supports a find interface but it is currently too slow to use. This is the experimental
 section.
 
     >>> t.find('a*')
