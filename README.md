@@ -7,9 +7,19 @@ can use these wherever you are using dictionaries. These symbol tables are as
 fast (or a little faster) as Python dict's on insert and little slower (1 order
 of magnatude) on read.
 
+## Install
+
+via pip
+
+    pip install -e git://github.com/timtadh/tst.git#egg=tst
+
+keeping up to date
+
+    pip install --upgrade -e git://github.com/timtadh/tst.git#egg=tst
+
 ##Usage
 
-    >>> from tst.tst import TST
+    >>> from tst import TST
     >>>
     >>> t = TST()
     >>> t['asdf'] = object()
