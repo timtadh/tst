@@ -34,7 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import unittest, os, sys, base64, itertools, random, time
 #from tst2.tst import TST as TST2
 from tst import TST
-from table import SymbolTable
 
 def strings(s='abcde'):
     out = list()
