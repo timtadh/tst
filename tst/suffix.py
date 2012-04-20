@@ -61,7 +61,7 @@ class SuffixTree(MutableMapping):
         while next:
             n, d = next
             if n == None:
-                raise KeyError, "substr '%s' is not in table." % substr
+              return
             if n.internal():
                 if d == len(substr):
                     root = n
@@ -70,11 +70,10 @@ class SuffixTree(MutableMapping):
                 if   ch <  n.ch: next = (n.l, d);   continue
                 elif ch == n.ch: next = (n.m, d+1); continue
                 elif ch >  n.ch: next = (n.r, d);   continue
-            elif n.key[:-1] == substr:
+            elif n.key[:len(substr)] == substr:
                 root = n
                 break;
-            print n.key
-            raise KeyError, "substr '%s' is not in table." % substr
+            return
         # now expand root
         q = deque()
         found = set()
